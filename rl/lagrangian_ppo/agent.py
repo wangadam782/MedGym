@@ -1,0 +1,175 @@
+"""PPO-Lagrangian agent.
+
+Combines PPO's clipped policy update with an adaptive Lagrange multiplier for
+soft constraint enforcement.
+"""
+import numpy as np
+import torch
+import torch.optim as optim
+
+from data.config import device
+from rl.cpo.agent import CPOBuffer
+from rl.ppo.agent import PPO
+from rl.ppo.networks import PPOCriticNetwork
+
+
+class LagrangianPPO(PPO):
+    """PPO with an adaptive Lagrangian penalty on expected cost."""
+
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        lr_actor: float = 3e-4,
+        lr_critic: float = 1e-3,
+        lr_lagrange: float = 5e-2,
+        gamma: float = 0.99,
+        lam: float = 0.95,
+        clip_eps: float = 0.2,
+        entropy_coef: float = 0.01,
+        vf_coef: float = 0.5,
+        max_grad_norm: float = 0.5,
+        update_epochs: int = 10,
+        mini_batch_size: int = 64,
+        cost_limit: float = 0.1,
+        init_lagrange_multiplier: float = 0.0,
+        max_lagrange_multiplier: float | None = None,
+        normalize_penalty: bool = True,
+        hidden: int = 256,
+    ):
+        super().__init__(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            lr_actor=lr_actor,
+            lr_critic=lr_critic,
+            gamma=gamma,
+            lam=lam,
+            clip_eps=clip_eps,
+            entropy_coef=entropy_coef,
+            vf_coef=vf_coef,
+            max_grad_norm=max_grad_norm,
+            update_epochs=update_epochs,
+            mini_batch_size=mini_batch_size,
+            hidden=hidden,
+        )
+        self.cost_limit = cost_limit
+        self.lr_lagrange = lr_lagrange
+        self.lagrange_multiplier = max(0.0, init_lagrange_multiplier)
+        self.max_lagrange_multiplier = max_lagrange_multiplier
+        self.normalize_penalty = normalize_penalty
+
+        self.cost_critic = PPOCriticNetwork(state_dim, hidden).to(device)
+        self.cost_critic_optim = optim.Adam(self.cost_critic.parameters(), lr=lr_critic)
+        self.buffer = CPOBuffer()
+
+    def select_action(self, state: np.ndarray, deterministic: bool = False):
+        s = torch.FloatTensor(state).unsqueeze(0).to(device)
+        with torch.no_grad():
+            if deterministic:
+                mu, _ = self.actor(s)
+                return torch.tanh(mu).cpu().numpy()[0]
+
+            action, log_prob = self.actor.sample(s)
+            value = self.critic(s).item()
+            cost_value = self.cost_critic(s).item()
+            return action.cpu().numpy()[0], log_prob.item(), value, cost_value
+
+    def store_transition(
+        self,
+        state,
+        action,
+        reward,
+        cost,
+        next_state,
+        done,
+        log_prob,
+        value,
+        cost_value,
+    ):
+        self.buffer.push(
+            state, action, reward, cost, next_state, done, log_prob, value, cost_value
+        )
+
+    def _penalized_advantages(self, advantages, cost_advantages):
+        penalized = advantages - self.lagrange_multiplier * cost_advantages
+        if self.normalize_penalty:
+            penalized = penalized / (1.0 + self.lagrange_multiplier)
+        return penalized
+
+    def _update_lagrange_multiplier(self, mean_cost: float) -> float:
+        constraint_violation = float(mean_cost - self.cost_limit)
+        self.lagrange_multiplier += self.lr_lagrange * constraint_violation
+        self.lagrange_multiplier = max(0.0, self.lagrange_multiplier)
+        if self.max_lagrange_multiplier is not None:
+            self.lagrange_multiplier = min(
+                self.max_lagrange_multiplier, self.lagrange_multiplier
+            )
+        return constraint_violation
+
+    def _get_rollout_data(self) -> dict:
+        with torch.no_grad():
+            last_state = torch.FloatTensor(self.buffer.next_states[-1]).unsqueeze(0).to(device)
+            last_value = self.critic(last_state).item()
+            last_cost_value = self.cost_critic(last_state).item()
+
+        data = self.buffer.get(last_value, last_cost_value, self.gamma, self.lam)
+        self.buffer.clear()
+        return data
+
+    def _build_update_tensors(self, data: dict) -> dict:
+        tensors = super()._build_update_tensors(data)
+        tensors["cost_advantages"] = torch.FloatTensor(data["cost_advantages"]).to(device)
+        tensors["cost_returns"] = torch.FloatTensor(data["cost_returns"]).to(device)
+        return tensors
+
+    def _before_policy_update(self, tensors: dict, data: dict) -> dict:
+        mean_cost = float(data["mean_cost"])
+        constraint_violation = self._update_lagrange_multiplier(mean_cost)
+        return {
+            "mean_cost": mean_cost,
+            "cost_limit": self.cost_limit,
+            "constraint_violation": constraint_violation,
+            "lagrange_multiplier": self.lagrange_multiplier,
+        }
+
+    def _policy_advantages(self, tensors: dict, data: dict):
+        return self._penalized_advantages(
+            tensors["advantages"],
+            tensors["cost_advantages"],
+        )
+
+    def _after_policy_update(self, tensors: dict) -> dict:
+        states = tensors["states"]
+        cost_returns = tensors["cost_returns"]
+
+        total_cost_vf_loss = 0.0
+        for _ in range(self.update_epochs):
+            values = self.cost_critic(states).squeeze()
+            cost_vf_loss = torch.nn.MSELoss()(values, cost_returns)
+            self.cost_critic_optim.zero_grad()
+            cost_vf_loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.cost_critic.parameters(), self.max_grad_norm)
+            self.cost_critic_optim.step()
+            total_cost_vf_loss += cost_vf_loss.item()
+
+        return {
+            "cost_vf_loss": total_cost_vf_loss / self.update_epochs,
+        }
+
+    def save(self, path: str) -> None:
+        torch.save(
+            {
+                "actor": self.actor.state_dict(),
+                "critic": self.critic.state_dict(),
+                "cost_critic": self.cost_critic.state_dict(),
+                "lagrange_multiplier": self.lagrange_multiplier,
+            },
+            path,
+        )
+
+    def load(self, path: str) -> None:
+        ckpt = torch.load(path, map_location=device)
+        self.actor.load_state_dict(ckpt["actor"])
+        self.critic.load_state_dict(ckpt["critic"])
+        self.cost_critic.load_state_dict(ckpt["cost_critic"])
+        self.lagrange_multiplier = float(ckpt.get("lagrange_multiplier", 0.0))

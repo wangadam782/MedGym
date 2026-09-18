@@ -1,0 +1,59 @@
+# configs/offline_rl/paper.yaml
+# Paper-scale fixed-dt offline RL configuration.
+# Current offline scripts are CLI-driven; use this file as a reference for paths and hyperparameters.
+
+paths:
+  results_root: results/offline
+  pinn_dir: results/pinn/individual
+  population_scales: results/pinn/population/scales.npy
+  online_ind_root: results/online/individual
+  online_pop_root: results/online/population
+  dataset_dir: results/offline/datasets
+  plot_dir: results/offline/plots
+
+workflow:
+  no_mimic_csv: true
+  fixed_dt_only: true
+  behavior_algo: lagrangian_trpo
+  K: 20
+  dt_mode: fixdt
+  patient_ids_file: checkpoints-cohort/cohort_1/cohort_1_training.csv
+  patient_ids: []
+
+collection:
+  n_eval: 50
+  action_noise_std: 0.05
+
+training:
+  methods: [dqn, cql, gcql]
+  epochs: 4000
+  batch_size: 256
+  hidden: 256
+  gamma: 0.99
+  cql_alpha: 5.0
+  dqn_cql_alpha: 0.0
+  gcql_alpha: 5.0
+  n_candidates: 12
+  noise_std: 0.1
+  clip_reward: true
+  reward_clip: [-8, -3]
+
+gcql:
+  supp_beta_c: 0.5
+  supp_beta_a: 2.0
+  supp_theta: 0.5
+  supp_lambda: 200.0
+
+evaluation:
+  n_eval: 50
+  K: 20
+  action_noise_std: 0.05
+  scopes: [individual, population_transfer]
+  model_tag: trpo_pop_fixdt
+  method_names: [dqn, cql, gcql]
+  dataset_naming: method_specific
+
+plotting:
+  include_ood: true
+  include_state_density: false
+  include_diagnostic_method_comparisons: false
