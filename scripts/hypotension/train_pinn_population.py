@@ -30,9 +30,10 @@ from hypotension.train.pinn.train_pinn import pinn_loss
 def _parse():
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("--n_patients", type=int, default=40)
-    p.add_argument("--patient_ids", type=int, nargs="+", default=None)
+    p.add_argument("--patient_ids", type=int, nargs="+",
+                   default=[26, 7, 52, 59, 43, 32, 4, 57, 35, 48])
     p.add_argument("--processed", type=str, default=str(PROCESSED_ROOT))
-    p.add_argument("--save_dir", type=str, default=str(PINN_POP_ROOT / "shared"))
+    p.add_argument("--save_dir", type=str, default=str(PINN_POP_ROOT / "clu10"))
     p.add_argument("--epochs", type=int, default=3000)
     p.add_argument("--patience", type=int, default=400)
     p.add_argument("--lr_pinn", type=float, default=1e-3)

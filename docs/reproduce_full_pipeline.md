@@ -1,6 +1,6 @@
 # Full Pipeline Reproduction
 
-Stage scripts in `scripts/` cover the complete workflow. All commands run from the repository root. Pre-trained checkpoints are on HuggingFace for stages 2–4; stages 0–1 require the MIMIC-IV trajectory CSV.
+Stage scripts in `scripts/` cover the complete workflow. All commands run from the repository root. Pre-trained checkpoints are on HuggingFace for stages 2–4; stages 0–1 require the MIMIC-III trajectory CSV.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ Stage scripts in `scripts/` cover the complete workflow. All commands run from t
 uv sync
 ```
 
-Place the DUA-compliant MIMIC-IV file at `data/mimic_pinn_v4_filtered.csv` before running stages 0–1.
+Place the DUA-compliant MIMIC-III file at `data/mimic_pinn_v4_filtered.csv` before running stages 0–1.
 
 ---
 

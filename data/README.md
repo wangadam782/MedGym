@@ -1,5 +1,5 @@
 > **Data files not included**: `mimic_pinn_v4_filtered.csv` and related patient CSV files
-> contain MIMIC-IV-derived clinical data and are not redistributed. See MIMIC-IV data use
+> contain MIMIC-III-derived clinical data and are not redistributed. See MIMIC-III data use
 > agreement for access. Patient cohort split files are in `cohort_splits/cohort_1/`.
 
 # Data

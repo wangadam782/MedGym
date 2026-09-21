@@ -11,9 +11,11 @@ Key features:
 - Online RL: SAC, PPO, TRPO, Lagrangian-PPO, Lagrangian-TRPO
 - Offline RL: DQN, CQL, GCQL across individual / cluster-pooled / population scopes
 - Safety- and trajectory-level evaluation
-- Two disease benchmarks: **sepsis** (MIMIC-IV) and **acute hypotension** (Health Gym)
+- Two disease benchmarks: **sepsis** (MIMIC-III) and **acute hypotension** (Health Gym)
 
 The released artifact includes the trained simulator and policy checkpoints needed to run the benchmark evaluations.
+
+![Workflow diagram](assets/Diagram_Benchmarking_Process.png)
 
 [Workflow diagram (PDF)](assets/Diagram_Benchmarking_Process.pdf)
 
@@ -23,13 +25,13 @@ The released artifact includes the trained simulator and policy checkpoints need
 
 ### Sepsis benchmark
 
-This repository does **not** redistribute MIMIC-IV-derived clinical time-series data.
+This repository does **not** redistribute MIMIC-III-derived clinical time-series data.
 
 Policy training and evaluation use the released PINN simulator checkpoints and do **not** require `data/mimic_pinn_v4_filtered.csv`.
 
-The original preprocessed MIMIC-IV-derived CSV was used only to construct the released PINN simulators. It contains patient-level clinical time-series data and is not included in this repository.
+The original preprocessed MIMIC-III-derived CSV was used only to construct the released PINN simulators. It contains patient-level clinical time-series data and is not included in this repository.
 
-See `data/README.md` for details on the MIMIC-IV preprocessing pipeline and data requirements.
+See `data/README.md` for details on the MIMIC-III preprocessing pipeline and data requirements.
 
 ### Acute hypotension benchmark
 
@@ -79,7 +81,7 @@ huggingface-cli login
 Contains PINN and online/offline policy checkpoints for 7 cohorts (cohort_1 – cohort_7). Cohort_1 also includes pre-trained offline policies.
 
 ```bash
-huggingface-cli download <HF_REPO_ID> \
+huggingface-cli download anonymous4514/medgym-ICLR2027 \
     checkpoints-cohort.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf checkpoints-cohort.tar.zst
 ```
@@ -89,7 +91,7 @@ tar --zstd -xf checkpoints-cohort.tar.zst
 Contains PINN and policy checkpoints for the 15-patient medoid/nearest-patient clustering experiments, plus pre-trained offline policies.
 
 ```bash
-huggingface-cli download <HF_REPO_ID> \
+huggingface-cli download anonymous4514/medgym-ICLR2027 \
     checkpoints-remaining15.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf checkpoints-remaining15.tar.zst
 ```
@@ -101,12 +103,10 @@ tar --zstd -xf checkpoints-remaining15.tar.zst
 Contains PINN checkpoints (ind / clu / pop scopes) and online RL policy checkpoints (ind / clu / pop scopes, fixdt and vardt modes).
 
 ```bash
-huggingface-cli download <HF_REPO_ID> \
+huggingface-cli download anonymous4514/medgym-ICLR2027 \
     checkpoints-hypotension.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf checkpoints-hypotension.tar.zst
 ```
-
-> **Note**: Replace `<HF_REPO_ID>` with the actual HuggingFace dataset repository ID (e.g., `username/medgym-checkpoints`).
 
 ---
 
@@ -303,22 +303,20 @@ The pipeline runs five steps: behavior data collection → cluster/population da
 
 ## Paper Results
 
-### Sepsis (MIMIC-IV)
+### Sepsis (MIMIC-III)
 
-| Data | Experiment | Paper figures / tables |
-|------|-----------|------------------------|
-| `checkpoints-cohort` (online eval) | Ind / Clu / Pop comparison | Fig 6, Table 2, Fig 8, Table 8 |
-| `checkpoints-cohort` (offline eval) | Offline DQN / CQL / GCQL | Table 3 |
-| `checkpoints-remaining15` (online eval) | Medoid vs nearest-patient | Fig 9, Table 9 |
-| `checkpoints-remaining15` (offline eval) | Offline on alternative clustering | Table 12 |
+| Data | Experiment | Paper figures / tables                             |
+|------|-----------|----------------------------------------------------|
+| `checkpoints-cohort` (online eval) | Ind / Clu / Pop comparison | Fig 6, Table 2, Fig 8, Table 8, Table 10, Table 11 |
+| `checkpoints-cohort` (offline eval) | Offline DQN / CQL / GCQL | Table 3                                            |
+| `checkpoints-remaining15` (online eval) | Medoid vs nearest-patient | Fig 9, Table 9                                     |
+| `checkpoints-remaining15` (offline eval) | Offline on alternative clustering | Table 12                                           |
 
 ### Acute Hypotension (Health Gym)
 
-| Data | Experiment | Results |
-|------|-----------|---------|
-| `checkpoints-hypotension` (online eval, fixdt) | Ind / Clu / Pop comparison | See `results/hypotension/` |
-| `checkpoints-hypotension` (online eval, vardt) | Adaptive-interval policies | See `results/hypotension/` |
-
+| Data                                                  | Experiment | Paper figures / tables     |
+|-------------------------------------------------------|-----------|----------------------------|
+| `checkpoints-hypotension` (online eval, offline eval) | Ind / Clu / Pop comparison | Table 4                    |
 ---
 
 ## Optional Training and Extension
@@ -344,7 +342,7 @@ docs/reproduce_full_pipeline.md
   Full reproduction from scratch using the stage scripts.
 
 data/README.md
-  Data requirements, MIMIC-IV restrictions, sample data
+  Data requirements, MIMIC-III restrictions, sample data
 ```
 
 ### Acute Hypotension
@@ -355,15 +353,13 @@ To train from scratch:
 # 1. Preprocess data
 python -m hypotension.data.preprocess
 
-# 2. Train individual PINNs for all ind + clu patients (60 patients total)
-bash scripts/hypotension/sweep_pinn.sh 0 59
+# 2. Train individual PINNs for all ind + clu patients
+bash scripts/hypotension/sweep_pinn.sh
 
-# 3. Train population PINN (cluster of 10 nearest patients)
-python scripts/hypotension/train_pinn_population.py \
-    --patient_ids 26 7 52 59 43 32 4 57 35 48 \
-    --save_dir checkpoints-hypotension/pinn/pop/clu10
+# 3. Train population PINN
+python scripts/hypotension/train_pinn_population.py
 
-# 4. Train RL policies (all 42 runs: ind + clu + pop, fixdt + vardt)
+# 4. Train RL policies
 bash scripts/hypotension/sweep_rl.sh
 
 # 5. Evaluate

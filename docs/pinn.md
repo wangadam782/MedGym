@@ -22,7 +22,7 @@ PINN training requires a user-provided preprocessed clinical time-series CSV, ty
 data/mimic_pinn_v4_filtered.csv
 ```
 
-This file contains MIMIC-IV-derived patient-level clinical time-series data and is not redistributed with this repository.
+This file contains MIMIC-III-derived patient-level clinical time-series data and is not redistributed with this repository.
 
 See `data/README.md` for the expected schema and data restrictions.
 
@@ -90,6 +90,6 @@ results/pinn/individual/
 ## Notes
 
 - PINN simulator training is optional for released benchmark evaluation.
-- Exact reconstruction of the released PINN checkpoints from MIMIC-IV is not part of the main artifact workflow because MIMIC-IV-derived patient time-series data cannot be redistributed.
+- Exact reconstruction of the released PINN checkpoints from MIMIC-III is not part of the main artifact workflow because MIMIC-III-derived patient time-series data cannot be redistributed.
 - Users may edit the PINN training scripts to construct new simulator benchmarks from their own local datasets.
 
