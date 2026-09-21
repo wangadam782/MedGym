@@ -30,11 +30,11 @@ from collect_offline_data import _collect_policy, TOTAL_TIME_H
 
 
 def load_test_patients(cluster_map_csv: Path) -> dict[int, int]:
-    """Return {patient_id: cluster_id} for rows with role=='test'."""
+    """Return {patient_id: cluster_id} for rows with role/split == 'test'."""
     result = {}
     with open(cluster_map_csv) as f:
         for row in csv.DictReader(f):
-            if row["role"].strip() == "test":
+            if row.get("role", row.get("split", "test")).strip() == "test":
                 result[int(row["patient_id"])] = int(row["cluster_id"])
     return result
 

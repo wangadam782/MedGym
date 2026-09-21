@@ -38,7 +38,7 @@ def load_test_patients(cluster_map_csv: Path) -> dict[int, int]:
     result = {}
     with open(cluster_map_csv) as f:
         for row in csv.DictReader(f):
-            if row["role"].strip() == "test":
+            if row.get("role", row.get("split", "test")).strip() == "test":
                 result[int(row["patient_id"])] = int(row["cluster_id"])
     return result
 
@@ -139,8 +139,8 @@ def main():
                 if scope == "ind":
                     model_tag = f"ind_{pid}_{args.tag}"
                 elif scope == "clu":
-                    # cohort: cluster{cid}_fixdt  /  remaining15: clu_{pid}_fixdt
-                    model_tag = f"clu_{pid}_{args.tag}" if args.clu_by_pid \
+                    # cohort: cluster{cid}_fixdt  /  remaining15: clu_{nearest_pid}_fixdt
+                    model_tag = f"clu_{cid}_{args.tag}" if args.clu_by_pid \
                                 else f"cluster{cid}_{args.tag}"
                 else:
                     model_tag = f"pop_{args.tag}"
@@ -181,9 +181,7 @@ def main():
                                            "info/scope":        np.array([scope]),
                                            "info/model_tag":    np.array([model_tag]),
                                            "info/patient_id":   np.array([pid]),
-                                           "info/cluster_id":   np.array([cid]),
-                                           "info/n_transitions":np.array([dataset["transitions/r"].shape[0]]),
-                                           "info/n_eval":       np.array([args.n_eval])})
+                                           "info/cluster_id":   np.array([cid])})
 
                 scope_rows[scope].append({
                     "method": method, "scope": scope, "tag": args.tag,
