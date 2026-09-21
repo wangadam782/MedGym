@@ -40,6 +40,7 @@ results/*
 results/pinn/
 results/online/
 results/hypotension/
+out/
 outputs/
 logs/
 *.log
@@ -74,4 +75,5 @@ Thumbs.db
 checkpoints-cohort/
 checkpoints-remaining15/
 checkpoints-hypotension/
+checkpoints-case-pinn/
 checkpoints-*.tar.zst

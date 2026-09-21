@@ -96,6 +96,18 @@ huggingface-cli download anonymous4514/medgym-ICLR2027 \
 tar --zstd -xf checkpoints-remaining15.tar.zst
 ```
 
+### Case-study checkpoints
+
+#### checkpoints-case-pinn (~1.1 MB)
+
+Contains the PINN simulators and pre-computed RL evaluation rollouts for patient 202347 (sepsis case study). Used to reproduce Fig 3, Fig 4, and Fig 7.
+
+```bash
+huggingface-cli download anonymous4514/medgym-ICLR2027 \
+    checkpoints-case-pinn.tar.zst --repo-type dataset --local-dir .
+tar --zstd -xf checkpoints-case-pinn.tar.zst
+```
+
 ### Hypotension checkpoints
 
 #### checkpoints-hypotension (~144 MB)
@@ -167,6 +179,22 @@ checkpoints-hypotension/
     ind/gcql/models/patient_<pid>_<fixdt|vardt>/
     clu/gcql/models/clu_cluster_<1-10>_<fixdt|vardt>/
     pop/gcql/models/pop_<fixdt|vardt>/
+```
+
+### checkpoints-case-pinn (sepsis case study)
+
+```text
+checkpoints-case-pinn/
+  pid202347.csv                        ← patient 202347 clinical time-series (130 rows)
+  pinn/
+    individual/patient_202347/         ← individual PINN (full trajectory)
+    population/                        ← population PINN
+    cluster_pooled/cluster_1/          ← cluster-pooled PINN (patient 202347 → cluster 1)
+    train70/patient_202347/            ← individual PINN trained on first 70% of steps (Fig 7)
+  online/
+    individual/patient_202347/lagrangian_trpo/K20/<fixdt|vardt>/eval/aggregated.npz
+    population/lagrangian_trpo/K20/<fixdt|vardt>/eval/aggregated.npz
+    cluster_pooled/cluster_1/lagrangian_trpo/K20/<fixdt|vardt>/eval/aggregated.npz
 ```
 
 Sepsis cohort cluster assignment files (`cohort_N_test.csv`, `remaining15_test.csv`) are included in the respective checkpoint archives.
@@ -253,20 +281,20 @@ results/hypotension/lagrangian_trpo/K48/n20_noise0p05/
 
 The offline evaluation trains and evaluates DQN / CQL / GCQL policies across individual, cluster-pooled, and population scopes. Pre-trained policies for cohort_1 and remaining15 are included in the downloaded checkpoints.
 
-### Evaluate pre-trained offline policies (cohort_1)
+### Evaluate pre-trained offline policies (cohort_7)
 
 ```bash
-COHORT=cohort_1 \
-PINN_DIR=checkpoints-cohort/cohort_1/pinn/ind \
-POLICY_ROOT=checkpoints-cohort/cohort_1/offline \
-EVAL_ROOT=results/offline_eval/cohort_1 \
+COHORT=cohort_7 \
+PINN_DIR=checkpoints-cohort/cohort_7/pinn/ind \
+POLICY_ROOT=checkpoints-cohort/cohort_7/offline \
+EVAL_ROOT=results/offline_eval/cohort_7 \
 bash scripts/offline.sh --eval_only
 ```
 
 Expected output:
 
 ```text
-results/offline_eval/cohort_1/
+results/offline_eval/cohort_7/
   ind/<dqn|cql|gcql>/summary/per_patient_metrics.csv
   clu/<dqn|cql|gcql>/summary/per_patient_metrics.csv
   pop/<dqn|cql|gcql>/summary/per_patient_metrics.csv
@@ -307,6 +335,7 @@ The pipeline runs five steps: behavior data collection → cluster/population da
 
 | Data | Experiment | Paper figures / tables                             |
 |------|-----------|----------------------------------------------------|
+| `checkpoints-case-pinn` | Patient 202347 case study | Fig 3, Fig 4, Fig 7 |
 | `checkpoints-cohort` (online eval) | Ind / Clu / Pop comparison | Fig 6, Table 2, Fig 8, Table 8, Table 10, Table 11 |
 | `checkpoints-cohort` (offline eval) | Offline DQN / CQL / GCQL | Table 3                                            |
 | `checkpoints-remaining15` (online eval) | Medoid vs nearest-patient | Fig 9, Table 9                                     |
