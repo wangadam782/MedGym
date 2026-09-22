@@ -286,28 +286,9 @@ results/hypotension/lagrangian_trpo/K48/n20_noise0p05/
 
 ---
 
-## Case Study — Sepsis (patient 202347)
-
-Reproduces Fig 3, Fig 4, and Fig 7 from `checkpoints-case-pinn`:
-
-```bash
-python scripts/figures/plot_pinn_fit.py            # all three figures
-python scripts/figures/plot_pinn_fit.py --fig 3    # Fig 3 only
-```
-
-Expected output:
-
-```text
-out/fig3_pid202347/pinn_fit_pid202347.png
-out/fig4_pid202347/rl_lagrangian_trpo_pid202347_K20.png
-out/fig7_pid202347/fig7_pid202347_ind_only.png
-```
-
----
-
 ## Offline Evaluation — Sepsis
 
-The offline evaluation trains and evaluates DQN / CQL / GCQL policies across individual, cluster-pooled, and population scopes. Pre-trained policies for cohort_1 and remaining15 are included in the downloaded checkpoints.
+The offline evaluation trains and evaluates DQN / CQL / GCQL policies across individual, cluster-pooled, and population scopes. Pre-trained policies for cohort_7 and remaining15 are included in the downloaded checkpoints.
 
 ### Evaluate pre-trained offline policies (cohort_7)
 
