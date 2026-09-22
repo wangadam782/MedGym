@@ -78,7 +78,7 @@ huggingface-cli login
 
 #### checkpoints-cohort (~2.1 GB)
 
-Contains PINN and online/offline policy checkpoints for 7 cohorts (cohort_1 – cohort_7). Cohort_1 also includes pre-trained offline policies.
+Contains PINN and online/offline policy checkpoints for 7 cohorts (cohort_1 – cohort_7). Cohort_7 also includes pre-trained offline policies.
 
 ```bash
 huggingface-cli download anonymous4514/medgym-ICLR2027 \
@@ -139,7 +139,7 @@ checkpoints-cohort/
       ind/patient_<pid>/<algo>/K20/<fixdt|vardt>/
       clu/cluster_<1-10>/<algo>/K20/<fixdt|vardt>/
       pop/<algo>/K20/<fixdt|vardt>/
-    offline/                       ← (cohort_1 only) pre-trained offline policies
+    offline/                       ← (cohort_7 only) pre-trained offline policies
       ind/<dqn|cql|gcql>/models/ind_<pid>_fixdt/
       clu/<dqn|cql|gcql>/models/cluster<k>_fixdt/
       pop/<dqn|cql|gcql>/models/pop_fixdt/
@@ -170,14 +170,14 @@ checkpoints-hypotension/
   pinn/
     ind/patient_<pid>/             ← individual PINN
     clu/cluster_<1-10>/            ← cluster PINN
-    pop/clu10/                     ← shared population PINN
-  online/
+    pop/                           ← shared population PINN
+  online/                          ← <algo> = lagrangian_trpo
     ind/patient_<pid>/<algo>/K48/<fixdt|vardt>/
     clu/cluster_<1-10>/<algo>/K48/<fixdt|vardt>/
     pop/<algo>/K48/<fixdt|vardt>/
   offline/
     ind/gcql/models/patient_<pid>_<fixdt|vardt>/
-    clu/gcql/models/clu_cluster_<1-10>_<fixdt|vardt>/
+    clu/gcql/models/cluster_<1-10>_<fixdt|vardt>/
     pop/gcql/models/pop_<fixdt|vardt>/
 ```
 
@@ -238,10 +238,19 @@ results/online/eval/cohort_1/<algo>/K20_n50/
 Evaluates individual, cluster (nearest-patient), and population policies:
 
 ```bash
+COHORT=remaining15 \
 COHORT_DIR=checkpoints-remaining15 \
 CLUSTER_MAP=checkpoints-remaining15/remaining15_test.csv \
 ALGO=lagrangian_trpo N_EVAL=50 \
 bash scripts/online_eval.sh
+```
+
+Expected output:
+
+```text
+results/online/eval/remaining15/lagrangian_trpo/K20_n50/
+  summary/summary_scores.npy
+  per_patient/*.png
 ```
 
 ---
@@ -273,6 +282,25 @@ results/hypotension/lagrangian_trpo/K48/n20_noise0p05/
     rollout_lagrangian_trpo_clu_fixdt.npz
     rollout_lagrangian_trpo_pop_fixdt.npz
   _meta.json
+```
+
+---
+
+## Case Study — Sepsis (patient 202347)
+
+Reproduces Fig 3, Fig 4, and Fig 7 from `checkpoints-case-pinn`:
+
+```bash
+python scripts/figures/plot_pinn_fit.py            # all three figures
+python scripts/figures/plot_pinn_fit.py --fig 3    # Fig 3 only
+```
+
+Expected output:
+
+```text
+out/fig3_pid202347/pinn_fit_pid202347.png
+out/fig4_pid202347/rl_lagrangian_trpo_pid202347_K20.png
+out/fig7_pid202347/fig7_pid202347_ind_only.png
 ```
 
 ---

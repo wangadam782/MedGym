@@ -112,7 +112,7 @@ Before running the command below, download and extract `pinn_pairwise_dist.tar.z
 
 ```bash
 cd results
-huggingface-cli download <HF_REPO_ID> pinn_pairwise_dist.tar.zst --repo-type dataset --local-dir .
+huggingface-cli download anonymous4514/medgym-ICLR2027 pinn_pairwise_dist.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf pinn_pairwise_dist.tar.zst
 cd ..
 ```
