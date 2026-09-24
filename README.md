@@ -81,7 +81,7 @@ huggingface-cli login
 Contains PINN and online/offline policy checkpoints for 7 cohorts (cohort_1 – cohort_7). Cohort_7 also includes pre-trained offline policies.
 
 ```bash
-huggingface-cli download anonymous4514/medgym-ICLR2027 \
+huggingface-cli download Kenkawano/medgym \
     checkpoints-cohort.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf checkpoints-cohort.tar.zst
 ```
@@ -91,7 +91,7 @@ tar --zstd -xf checkpoints-cohort.tar.zst
 Contains PINN and policy checkpoints for the 15-patient medoid/nearest-patient clustering experiments, plus pre-trained offline policies.
 
 ```bash
-huggingface-cli download anonymous4514/medgym-ICLR2027 \
+huggingface-cli download Kenkawano/medgym \
     checkpoints-remaining15.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf checkpoints-remaining15.tar.zst
 ```
@@ -103,7 +103,7 @@ tar --zstd -xf checkpoints-remaining15.tar.zst
 Contains the PINN simulators and pre-computed RL evaluation rollouts for patient 202347 (sepsis case study). Used to reproduce Fig 3, Fig 4, and Fig 7.
 
 ```bash
-huggingface-cli download anonymous4514/medgym-ICLR2027 \
+huggingface-cli download Kenkawano/medgym \
     checkpoints-case-pinn.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf checkpoints-case-pinn.tar.zst
 ```
@@ -115,7 +115,7 @@ tar --zstd -xf checkpoints-case-pinn.tar.zst
 Contains PINN checkpoints (ind / clu / pop scopes) and online RL policy checkpoints (ind / clu / pop scopes, fixdt and vardt modes).
 
 ```bash
-huggingface-cli download anonymous4514/medgym-ICLR2027 \
+huggingface-cli download Kenkawano/medgym \
     checkpoints-hypotension.tar.zst --repo-type dataset --local-dir .
 tar --zstd -xf checkpoints-hypotension.tar.zst
 ```
@@ -337,18 +337,6 @@ The pipeline runs five steps: behavior data collection → cluster/population da
 | 5 | `eval_cluster_offline.py` | Evaluate on test patients; save per-patient metrics |
 
 ---
-
-## Paper Results
-
-### Sepsis (MIMIC-III)
-
-| Data | Experiment | Paper figures / tables                             |
-|------|-----------|----------------------------------------------------|
-| `checkpoints-case-pinn` | Patient 202347 case study | Fig 3, Fig 4, Fig 7 |
-| `checkpoints-cohort` (online eval) | Ind / Clu / Pop comparison | Fig 6, Table 2, Fig 8, Table 8, Table 10, Table 11 |
-| `checkpoints-cohort` (offline eval) | Offline DQN / CQL / GCQL | Table 3                                            |
-| `checkpoints-remaining15` (online eval) | Medoid vs nearest-patient | Fig 9, Table 9                                     |
-| `checkpoints-remaining15` (offline eval) | Offline on alternative clustering | Table 12                                           |
 
 ### Acute Hypotension (Health Gym)
 
