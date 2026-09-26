@@ -159,7 +159,7 @@ results/population_selection/summary.json
 The final output is the path passed to `**--output**` (default `data/population_paper.csv`):
 
 ```text
-data/population_paer.csv
+data/population_paper.csv
 ```
 
 The result should be the same as `checkpoints-cohort/cohort_1/cohort_1_training.csv`
@@ -232,4 +232,3 @@ By contrast, tight groups are constructed to be both internally coherent and mut
 - Heavy intermediate artifacts such as distance matrices and plots should be stored under `results/`.
 - Lightweight patient ID lists such as `mimic_filtered.csv` (eligible pool) and `population.csv` (final cohort) can be stored under `data/`.
 - **`checkpoints-cohort/cohort_1/cohort_1_training.csv` is not fixed:** you may edit it (same one-column `pid` layout), pass another pid-only CSV via flags such as `--patient_ids_csv` in `scripts/train_pinn_population.py`, or **replace this pipeline entirely** with your own cohort algorithm and write the same format. Lines starting with `#` in that CSV are ignored when loading. See **`data/README.md`** (end section on `population.csv`).
-

@@ -73,7 +73,7 @@ patient_fit_plots/
 Train individual PINNs for a list of patients:
 
 ```bash
-PATIENT_IDS_FILE=results/paper/cohort/patient_ids.txt SAVE_ROOT=results/pinn/individual N_GPUS=4 JOBS_PER_GPU=2 SKIP_DONE=1 ./scripts/train_pinn_sweep.sh
+PATIENT_IDS_FILE=results/paper/cohort/patient_ids.txt SAVE_ROOT=results/pinn/individual N_GPUS=4 JOBS_PER_GPU=2 SKIP_DONE=1 ./scripts/sweep_pinn.sh
 ```
 
 This script trains one individual PINN per patient and can run multiple training jobs in parallel across GPUs.
@@ -92,4 +92,3 @@ results/pinn/individual/
 - PINN simulator training is optional for released benchmark evaluation.
 - Exact reconstruction of the released PINN checkpoints from MIMIC-III is not part of the main artifact workflow because MIMIC-III-derived patient time-series data cannot be redistributed.
 - Users may edit the PINN training scripts to construct new simulator benchmarks from their own local datasets.
-

@@ -18,7 +18,7 @@ Place the DUA-compliant MIMIC-III file at `data/mimic_pinn_v4_filtered.csv` befo
 COHORT=cohort_1 bash scripts/clustering.sh
 ```
 
-Outputs `cohort_splits/cohort_1/cluster_map.csv`. Key variables: `GROUP_SIZE` (default 11), `MAX_GROUPS` (default 10).
+Outputs `cohort_splits/cohort_1/cluster_map.csv` and `patient_split_medrl_algorithms_final_mixed.csv`. Key variables: `GROUP_SIZE` (default 11), `MAX_GROUPS` (default 10).
 
 ---
 

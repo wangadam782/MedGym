@@ -8,7 +8,7 @@ paths:
   population_pinn_dir: results/pinn/population
   individual_pinn_dir: results/pinn/individual
   cluster_pooled_pinn_dir: results/pinn/cluster_pooled
-  cluster_train_split_csv: cohort_splits/cohort_1/cluster_map.csv
+  cluster_train_split_csv: cohort_splits/cohort_1/patient_split_medrl_algorithms_final_mixed.csv
 
 env:
   total_time_h: 96.0

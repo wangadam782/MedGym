@@ -11,7 +11,7 @@ results/pinn/
 
 Retraining is **not** required to run the main benchmark if you use released artifacts. The commands below are for reproduction or extensions.
 
-**Individual** training and the per-patient eval scripts require **`init_state_norm.npy`** next to each `pinn.pt` (PINN-normalised initial state). Wide-format MIMIC trajectory CSV is **not** read by `train_rl.py`, `eval_ind_cluster_pop.py`, or `eval_perpatient.py`. Optional YAML key `paths.csv` is only kept for `_meta.json` compatibility.
+**Individual** training and evaluation require **`init_state_norm.npy`** next to each `pinn.pt` (PINN-normalised initial state). Wide-format MIMIC trajectory CSV is **not** read by `train_rl.py` or `eval_ind_cluster_pop.py`. Optional YAML key `paths.csv` is only kept for `_meta.json` compatibility.
 
 ### Quick review
 
@@ -174,14 +174,14 @@ One pooled policy per cluster PINN. Uses `SCOPE=cluster` in the unified `sweep_r
 | Item               | Path                                                                                                                                    |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Cluster PINNs      | `results/pinn/cluster_pooled/cluster_<id>/` with `pinn.pt`, `scales.npy`                                                                |
-| Train/test split   | `CLUSTER_TRAIN_SPLIT_CSV=cohort_splits/cohort_1/cluster_map.csv` (default)               |
+| Train/test split   | `CLUSTER_TRAIN_SPLIT_CSV=cohort_splits/cohort_1/patient_split_medrl_algorithms_final_mixed.csv` (default) |
 | Checkpoints        | `results/online/cluster_pooled/cluster_<id>/<algo>/K<K>/<fixdt|vardt>/policy.pt`, `actor.pt`, `_meta.json`, `train_log.csv`            |
 
 Full sweep:
 
 ```bash
 SCOPE=cluster PINN_DIR=results/pinn/cluster_pooled SAVE_ROOT=results/online \
-  CLUSTER_TRAIN_SPLIT_CSV=cohort_splits/cohort_1/cluster_map.csv \
+  CLUSTER_TRAIN_SPLIT_CSV=cohort_splits/cohort_1/patient_split_medrl_algorithms_final_mixed.csv \
   ./scripts/online/sweep_rl.sh
 ```
 
@@ -220,7 +220,7 @@ python scripts/online/train_rl.py --config configs/online_rl/default.yaml \
 python scripts/online/train_rl.py --config configs/online_rl/default.yaml \
   --scope cluster_pooled --cluster_id 1 --algo lagrangian_trpo --K 20 --dt_mode fixdt \
   --pinn_dir results/pinn/cluster_pooled \
-  --cluster_train_split_csv cohort_splits/cohort_1/cluster_map.csv \
+  --cluster_train_split_csv cohort_splits/cohort_1/patient_split_medrl_algorithms_final_mixed.csv \
   --save_root results/online
 ```
 
@@ -228,15 +228,21 @@ python scripts/online/train_rl.py --config configs/online_rl/default.yaml \
 
 ## Step 5: Evaluation utilities
 
-### Per-patient rollout sweep
+### Per-patient rollout evaluation
 
-`scripts/online/sweep_eval_perpatient.sh` drives `scripts/online/eval_perpatient.py` across GPUs. Outputs live under `${POLICY_ROOT}/eval/`.
+Use the three-scope evaluator with `--patient_ids` to select individual test patients:
 
 ```bash
-PINN_DIR=results/pinn/individual POLICY_ROOT=results/online/individual \
-  PATIENT_IDS_FILE=checkpoints-cohort/cohort_1/cohort_1_training.csv \
-  ALGOS=sac K_VALUES=20 INIT_NOISE_STD=0 N_GPUS=1 JOBS_PER_GPU=1 \
-  ./scripts/online/sweep_eval_perpatient.sh
+python scripts/online/eval_ind_cluster_pop.py \
+  --algo sac --K 20 --patient_ids 245405 --n_eval 50 \
+  --pinn_dir checkpoints-cohort/cohort_1/pinn/ind \
+  --ind_root checkpoints-cohort/cohort_1/online/ind \
+  --pop_root checkpoints-cohort/cohort_1/online/pop \
+  --cluster_root checkpoints-cohort/cohort_1/online/clu \
+  --cluster_scales_root checkpoints-cohort/cohort_1/pinn/clu \
+  --glb_scales checkpoints-cohort/cohort_1/pinn/pop/scales.npy \
+  --cluster_map checkpoints-cohort/cohort_1/cohort_1_test.csv \
+  --save_dir results/online/eval/cohort_1/sac/K20_n50
 ```
 
 ### Ind / Cluster-pooled / Population comparison
@@ -275,11 +281,8 @@ python scripts/online/eval_ind_cluster_pop.py --algo sac --K 20 \
 
 End-to-end benchmark evaluation from released or locally trained checkpoints is documented in the top-level **`README.md`**.
 
-Related scripts (under `scripts/online/`):
+Related script (under `scripts/online/`):
 
 ```text
 scripts/online/eval_ind_cluster_pop.py   — Ind / Cluster / Pop three-way comparison
-scripts/online/eval_population.py        — Population sweep (Figure 4)
-scripts/online/eval_perpatient.py        — Per-patient sweep (Figure 4 per-patient)
-scripts/online/sweep_eval_perpatient.sh  — Multi-GPU driver for eval_perpatient.py
 ```
